@@ -15,9 +15,9 @@ type Response struct {
   Signal string
 }
 
-type Json struct {
-  LogicalResourceId string
-  StackName string
+type JsonData struct {
+  LogicalResourceId string `json:"LogicalResourceId"`
+  StackName string `json:"StackName"`
 }
 
 func signal(send string) {
@@ -32,24 +32,28 @@ func signal(send string) {
     return     
   }
 
-  file, e := ioutil.ReadFile("./tempjson.json")
+  file, e := ioutil.ReadFile("./config/cfn_signaler.json")
   if e != nil {
     return
   }
   
-  jsonParser, e := json.NewDecoder(string.NewReader(file))
-  if e !=nil {
-    return
+  var conf JsonData
+  err=json.Unmarshal(file, &conf)
+  if err!=nil{
+    fmt.Print("Error:",err)
   }
-  fmt.Println("jsonParser.StackName")
+  
+
+  fmt.Println(conf.StackName)
+  fmt.Println(conf.LogicalResourceId)
   
 
   cfn_config := aws.NewConfig().WithRegion(region)  
   svc := cloudformation.New(cfn_config)
 
   params := &cloudformation.SignalResourceInput { 
-    LogicalResourceId: aws.String("AWSEBAutoScalingGroup"),
-    StackName: aws.String("awseb-e-kgjpcfyp2n-stack"),
+    LogicalResourceId: aws.String(conf.LogicalResourceId),
+    StackName: aws.String(conf.StackName),
     Status: aws.String(send),
     UniqueId: aws.String(instance_id),
   } 
