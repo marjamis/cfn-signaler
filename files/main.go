@@ -24,30 +24,25 @@ func signal(send string) {
   metadata := ec2metadata.New(nil)  
   region, err := metadata.Region()  
   if err !=nil {   
-    return     
+    fmt.Println("Error: ", err)
   }
 
   instance_id, err := metadata.GetMetadata("instance-id")
   if err !=nil {   
-    return     
+    fmt.Println("Error: ", err)
   }
 
-  file, e := ioutil.ReadFile("./config/cfn_signaler.json")
-  if e != nil {
-    return
+  file, err := ioutil.ReadFile("./config/cfn_signaler.json")
+  if err != nil {
+    fmt.Println("Error: ", err)
   }
   
   var conf JsonData
   err=json.Unmarshal(file, &conf)
   if err!=nil{
-    fmt.Print("Error:",err)
+    fmt.Println("Error: ", err)
   }
   
-
-  fmt.Println(conf.StackName)
-  fmt.Println(conf.LogicalResourceId)
-  
-
   cfn_config := aws.NewConfig().WithRegion(region)  
   svc := cloudformation.New(cfn_config)
 
@@ -57,20 +52,16 @@ func signal(send string) {
     Status: aws.String(send),
     UniqueId: aws.String(instance_id),
   } 
-  resp, err := svc.SignalResource(params)
 
+  resp, err := svc.SignalResource(params)
   if err != nil { 
     // Print the error, cast err to awserr.Error to get the Code and 
     // Message from an error.
-    fmt.Println(err.Error()) 
+    fmt.Println("Error: ", err)
     return  
   }
  
   fmt.Println(resp)
-}
-
-func logging() {
-  fmt.Println("Log")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -89,15 +80,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
     return 
   }  
   fmt.Fprintf(w, "%s", body)
-  logging()
+  fmt.Println("handler IP: ", r.RemoteAddr)
 }
 
 func signalHandler(w http.ResponseWriter, r *http.Request) {  
- fmt.Println(r.FormValue("send"))
   value := r.FormValue("send")
   
   var text string
-  fmt.Println(text)
   if value == "SUCCESS" {
     signal("SUCCESS")
     text = "Success signal sent"
@@ -108,15 +97,18 @@ func signalHandler(w http.ResponseWriter, r *http.Request) {
     text = "Invalid signal type"
   }  
   
-  fmt.Println(text)
   t, _ := template.ParseFiles("templates/signal.html")
   data := &Response{Signal: text}
   t.Execute(w, data)
-  logging()
+  fmt.Println("signalHandler IP: ", r.RemoteAddr, "signal: ", value)
 }
 
 func main() {
     http.HandleFunc("/", handler)
     http.HandleFunc("/signal/", signalHandler)
-    http.ListenAndServe(":8080", nil)
+    fmt.Println("Listening on port 8080...")
+    err := http.ListenAndServe(":8080", nil)
+    if err != nil {
+      fmt.Println("Error: ", err)
+    }
 }
