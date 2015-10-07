@@ -1,6 +1,6 @@
 ===README===
 
 ==Run the container with==
-docker run -dit -v /var/lib/cfn_signaler/:/app/config -p 8080:8080 cfn_signaler:20151006
+docker run -dit -v /var/lib/cfn_signaler/:/app/config -p 8080:8080 marjamis/cfn-signaler
 
 ==Sample Cloud Formation template==
