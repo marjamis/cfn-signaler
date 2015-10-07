@@ -16,4 +16,4 @@ ADD files/templates/* /app/templates/
 
 WORKDIR /app/
 
-ENTRYPOINT [ "/usr/local/go/bin/go", "run", "/app/main.go" ]
+ENTRYPOINT [ "/usr/local/go/bin/go", "run", "./main.go" ]
