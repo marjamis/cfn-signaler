@@ -32,7 +32,7 @@ func signal(send string) {
     fmt.Println("Error: ", err)
   }
 
-  file, err := ioutil.ReadFile("./config/cfn_signaler.json")
+  file, err := ioutil.ReadFile("./config/cfn-signaler.json")
   if err != nil {
     fmt.Println("Error: ", err)
   }
