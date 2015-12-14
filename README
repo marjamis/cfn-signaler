@@ -19,7 +19,7 @@ curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
                 ],
                 "KeyName" : "172.31.x.x-testing",
                 "InstanceType": "t2.small",
-                "IamInstanceProfile": "arn:aws:iam::109951093165:instance-profile/cfn-signaler",
+                "IamInstanceProfile": "arn:aws:iam::<accountId>:instance-profile/cfn-signaler",
                 "UserData": {
                     "Fn::Base64": {
                         "Fn::Join": [
