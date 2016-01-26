@@ -44,7 +44,7 @@ func signal(send string) {
   }
   
   cfn_config := aws.NewConfig().WithRegion(region)  
-  svc := cloudformation.New(cfn_config)
+  svc := cloudformation.New(nil, cfn_config)
 
   params := &cloudformation.SignalResourceInput { 
     LogicalResourceId: aws.String(conf.LogicalResourceId),
