@@ -1,12 +1,12 @@
-===README===
-==Run the container with==
+# README
+## Run the container with
 docker run -dit -v /var/lib/cfn_signaler/:/app/config -p 8080:8080 marjamis/cfn-signaler
 
-==Manual call value==
+## Manual call value
 curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
 curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
 
-==Sample Cloud Formation template==
+## Sample Cloud Formation template
 {
     "Resources": {
         "SimpleConfig": {
