@@ -1,13 +1,13 @@
 # README
 ## Run the container with
-docker run -dit -e STACKNAME=\<stackname\> -e LOGICALID=\<logicalid\> -p 8080:8080 marjamis/cfn-signaler
+    docker run -dit -e STACKNAME=\<stackname\> -e LOGICALID=\<logicalid\> -p 8080:8080 marjamis/cfn-signaler
 
 ## Manual call value
-curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
-curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
+    curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
+    curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
 
 ## Sample Cloud Formation template
-  {
+    {
     "Resources": {
         "SimpleConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
@@ -69,5 +69,4 @@ curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
             }
         }
     }
-  }
-
+    }
