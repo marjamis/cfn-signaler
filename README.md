@@ -1,6 +1,6 @@
 # README
 ## Run the container with
-docker run -dit -v /var/lib/cfn_signaler/:/app/config -p 8080:8080 marjamis/cfn-signaler
+docker run -dit -p 8080:8080 marjamis/cfn-signaler
 
 ## Manual call value
 curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
