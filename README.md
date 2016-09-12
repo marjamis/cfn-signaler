@@ -1,21 +1,20 @@
 # README
 ## Run the container with
-docker run -dit -p 8080:8080 marjamis/cfn-signaler
+docker run -dit -e STACKNAME=\<stackname\> -e LOGICALID=\<logicalid\> -p 8080:8080 marjamis/cfn-signaler
 
 ## Manual call value
 curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
 curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
 
 ## Sample Cloud Formation template
-{
+  {
     "Resources": {
         "SimpleConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
                 "ImageId": "ami-9ff7e8af",
                 "SecurityGroups": [
-                    "sg-0c986c69",
-                    "sg-0e986c6b"
+                    "sg-0c986c69"
                 ],
                 "KeyName" : "172.31.x.x-testing",
                 "InstanceType": "t2.small",
@@ -30,13 +29,11 @@ curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
                                 "yum install docker -y\n",
                                 "chkconfig docker on\n",
                                 "service docker start\n",
-                                "mkdir /var/lib/cfn-signaler/ \n",
-                                "echo '{\"LogicalResourceId\": \"ASG1\",\"StackName\":\"",
+                                "docker run -dit -e LOGICALID=ASG1 -e STACKNAME=",
                                 {
                                     "Ref": "AWS::StackName"
                                 },
-                                "\"}' > /var/lib/cfn-signaler/cfn-signaler.json \n",
-                                "docker run -dit -v /var/lib/cfn-signaler/:/app/config -p 8080:8080 marjamis/cfn-signaler\n"
+                                " -p 8080:8080 marjamis/cfn-signaler\n"
                             ]
                         ]
                     }
@@ -72,5 +69,5 @@ curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
             }
         }
     }
-}
+  }
 
