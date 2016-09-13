@@ -16,21 +16,27 @@
                 "SecurityGroups": [
                     "sg-0c986c69"
                 ],
-                "KeyName" : "172.31.x.x-testing",
+                "KeyName": "172.31.x.x-testing",
                 "InstanceType": "t2.small",
-                "IamInstanceProfile": "arn:aws:iam::<accountId>:instance-profile/cfn-signaler",
+                "IamInstanceProfile": {
+                    "Fn::Join": [
+                        "", [
+                            "arn:aws:iam::", {
+                                "Ref": "AWS::AccountId"
+                            }, ":instance-profile/cfn-signaler"
+                        ]
+                    ]
+                },
                 "UserData": {
                     "Fn::Base64": {
                         "Fn::Join": [
-                            "",
-                            [
+                            "", [
                                 "#!/bin/bash -xe\n",
                                 "yum update -y aws-cfn-bootstrap\n",
                                 "yum install docker -y\n",
                                 "chkconfig docker on\n",
                                 "service docker start\n",
-                                "docker run -dit -e LOGICALID=ASG1 -e STACKNAME=",
-                                {
+                                "docker run -dit -e LOGICALID=ASG1 -e STACKNAME=", {
                                     "Ref": "AWS::StackName"
                                 },
                                 " -p 8080:8080 marjamis/cfn-signaler\n"
