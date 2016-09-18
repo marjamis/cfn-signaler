@@ -8,24 +8,47 @@
 
 ## Sample Cloud Formation template
     {
+    "Parameters": {
+        "AMI": {
+            "Type": "AWS::EC2::Image::Id",
+            "Default": "ami-9ff7e8af"
+        },
+        "SecurityGroups": {
+            "Description": "Make sure port used is open.",
+            "Type": "CommaDelimitedList"
+        },
+        "SSHKeyPair": {
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "InstanceType": {
+            "Type": "String",
+            "Default": "t2.micro"
+        },
+        "InstanceProfile": {
+            "Type": "String"
+        },
+        "PublicPort": {
+            "Type": "String"
+        }
+    },
     "Resources": {
         "SimpleConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
-                "ImageId": "ami-9ff7e8af",
-                "SecurityGroups": [
-                    "sg-0c986c69"
-                ],
-                "KeyName": "172.31.x.x-testing",
-                "InstanceType": "t2.small",
+                "ImageId": {
+                    "Ref": "AMI"
+                },
+                "SecurityGroups": {
+                    "Ref": "SecurityGroups"
+                },
+                "KeyName": {
+                    "Ref": "SSHKeyPair"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
                 "IamInstanceProfile": {
-                    "Fn::Join": [
-                        "", [
-                            "arn:aws:iam::", {
-                                "Ref": "AWS::AccountId"
-                            }, ":instance-profile/cfn-signaler"
-                        ]
-                    ]
+                    "Ref": "InstanceProfile"
                 },
                 "UserData": {
                     "Fn::Base64": {
@@ -39,7 +62,9 @@
                                 "docker run -dit -e LOGICALID=ASG1 -e STACKNAME=", {
                                     "Ref": "AWS::StackName"
                                 },
-                                " -p 8080:8080 marjamis/cfn-signaler\n"
+                                " -p ", {
+                                    "Ref": "PublicPort"
+                                }, ":8080 marjamis/cfn-signaler\n"
                             ]
                         ]
                     }
@@ -70,7 +95,7 @@
                 "LaunchConfigurationName": {
                     "Ref": "SimpleConfig"
                 },
-                "MaxSize": "1",
+                "MaxSize": "2",
                 "MinSize": "1"
             }
         }
