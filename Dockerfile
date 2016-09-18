@@ -1,6 +1,6 @@
 FROM alpine:3.3
 
-RUN apk --update upgrade && apk add ca-certificates && update-ca-certificates
+RUN apk --no-cache --update upgrade && apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY ./application/bin/cfn-signaler.go /entrypoint
 COPY ./application/src/cfn-signaler/stylesheets/* /stylesheets/

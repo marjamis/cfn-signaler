@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"errors"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
@@ -25,7 +23,7 @@ func signal(send string) (err error){
 	metadata := ec2metadata.New(session)
 
 	if !metadata.Available() {
-		log.Info("Error: Metadata not available.")
+		log.Error("Error: Metadata not available.")
 		return errors.New("Error: Metadata not available.")
 	}
 
@@ -54,13 +52,13 @@ func signal(send string) (err error){
 		UniqueId:          aws.String(instance_id),
 	}
 
-	resp, err := svc.SignalResource(params)
+	_, err = svc.SignalResource(params)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	log.Info("signal ", resp)
+	log.Info("Function: handler - LogicalID: ", logical_id, " - StackName: ", stack_name)
 	return nil
 }
 
@@ -71,23 +69,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if len(title) == 0 {
 		filename = "templates/index.html"
 	} else {
-		filename = title
+		if _, err := os.Stat(title); os.IsNotExist(err){
+			filename = "templates/http_404.html"
+		} else {
+			filename = title
+		}
 	}
 
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Fprintf(w, "%s", "No such page")
-		return
-	}
-	fmt.Fprintf(w, "%s", body)
-	log.Info("handler IP: ", r.RemoteAddr)
+	t, _ := template.ParseFiles(filename)
+        t.Execute(w, nil)
+
+	log.Info("Function: handler - IP: ", r.RemoteAddr, " - File: ", filename)
 }
 
 func signalHandler(w http.ResponseWriter, r *http.Request) {
 	value := r.FormValue("send")
-
 	var text string
 	var err error
+
 	if value == "SUCCESS" {
 		err = signal("SUCCESS")
 		text = "Success signal"
@@ -95,6 +94,7 @@ func signalHandler(w http.ResponseWriter, r *http.Request) {
 		err = signal("FAILURE")
 		text = "Failed signal"
 	} else {
+		value = "INVALID"
 		err = errors.New("Invalid signal type specified in POST")
 		text = "Invalid signal type"
 	}
@@ -102,16 +102,21 @@ func signalHandler(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("templates/signal.html")
 	data := &Response{Signal: text, Error: err}
 	t.Execute(w, data)
-	log.Info("signalHandler IP: ", r.RemoteAddr, " signal: ", value)
+
+	log.Info("Function: signalHandler - IP: ", r.RemoteAddr, " - signal: ", value)
 }
 
 func main() {
         port := os.Getenv("PORT")
+
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/signal", signalHandler)
 	http.HandleFunc("/signal/", signalHandler)
+
 	log.Info("Listening on port " + port + "...")
 	err := http.ListenAndServe(":" + port, nil)
 	if err != nil {
 		log.Error(err)
+		return
 	}
 }
