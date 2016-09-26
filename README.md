@@ -1,12 +1,23 @@
 # README
-## Run the container with
+This is a basic method to signal back to the Creation or Update Policy of an SG within a CFN(Cloud Formations) Stack. In this way you can test how this works in certain cirumstances against a test application.
+
+This program is essentially a webserver which allows you to signal a success or failure depending on what you're attempting to test  via a website or a POST request to the IP address of the EC2 Instance that is apart of the ASG.
+
+Issues or Feature Requests are welcome.
+
+	NOTE: The master branch is automatically created into a docker image which can be accessed publicly. This image is located at: https://hub.docker.com/r/marjamis/cfn-signaler/
+
+## Run the container
     docker run -dit -e STACKNAME=<stackname> -e LOGICALID=<logicalid> -p 8080:8080 marjamis/cfn-signaler
 
-## Manual call value
+## Run the binary directly
+    LOGICALID=<logical_id_of_ASG> STACKNAME=<stack_name> PORT=8080 go run main.go
+
+## Manual curl against the endpoint
     curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
     curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
 
-## Sample Cloud Formation template
+## Sample Cloud Formation Template
     {
     "Parameters": {
         "AMI": {
