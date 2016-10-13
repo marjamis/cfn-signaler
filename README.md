@@ -1,31 +1,67 @@
 # README
-## Run the container with
-    docker run -dit -e STACKNAME=\<stackname\> -e LOGICALID=\<logicalid\> -p 8080:8080 marjamis/cfn-signaler
+This is a basic method to signal back to the Creation or Update Policy of an SG within a CFN(Cloud Formations) Stack. In this way you can test how this works in certain cirumstances against a test application.
 
-## Manual call value
+This program is essentially a webserver which allows you to signal a success or failure depending on what you're attempting to test  via a website or a POST request to the IP address of the EC2 Instance that is apart of the ASG.
+
+Issues or Feature Requests are welcome.
+
+	NOTE: The master branch is automatically created into a docker image which can be accessed publicly. This image is located at: https://hub.docker.com/r/marjamis/cfn-signaler/
+
+## Run the container
+    docker run -dit -e STACKNAME=<stackname> -e LOGICALID=<logicalid> -p <PublicPort>:8080 marjamis/cfn-signaler
+
+## Run the application directly with go
+    LOGICALID=<logical_id_of_ASG> STACKNAME=<stack_name> go run main.go
+
+## Manual curl against the endpoint
     curl -X POST -d "send=FAILURE" <ip>:<port>/signal/
     curl -X POST -d "send=SUCCESS" <ip>:<port>/signal/
 
-## Sample Cloud Formation template
+## Sample Cloud Formation Template
     {
+    "Parameters": {
+        "AMI": {
+            "Type": "AWS::EC2::Image::Id"
+        },
+        "SecurityGroups": {
+            "Description": "Make sure port used is open.",
+            "Type": "CommaDelimitedList"
+        },
+        "SSHKeyPair": {
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "InstanceType": {
+            "Type": "String",
+            "Default": "t2.micro"
+        },
+        "InstanceProfile": {
+            "Type": "String"
+        },
+        "PublicPort": {
+            "Type": "String"
+        },
+        "InstanceName": {
+            "Type": "String"
+        }
+    },
     "Resources": {
         "SimpleConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
-                "ImageId": "ami-9ff7e8af",
-                "SecurityGroups": [
-                    "sg-0c986c69"
-                ],
-                "KeyName": "172.31.x.x-testing",
-                "InstanceType": "t2.small",
+                "ImageId": {
+                    "Ref": "AMI"
+                },
+                "SecurityGroups": {
+                    "Ref": "SecurityGroups"
+                },
+                "KeyName": {
+                    "Ref": "SSHKeyPair"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
                 "IamInstanceProfile": {
-                    "Fn::Join": [
-                        "", [
-                            "arn:aws:iam::", {
-                                "Ref": "AWS::AccountId"
-                            }, ":instance-profile/cfn-signaler"
-                        ]
-                    ]
+                    "Ref": "InstanceProfile"
                 },
                 "UserData": {
                     "Fn::Base64": {
@@ -39,7 +75,9 @@
                                 "docker run -dit -e LOGICALID=ASG1 -e STACKNAME=", {
                                     "Ref": "AWS::StackName"
                                 },
-                                " -p 8080:8080 marjamis/cfn-signaler\n"
+                                " -p ", {
+                                    "Ref": "PublicPort"
+                                }, ":8080 marjamis/cfn-signaler\n"
                             ]
                         ]
                     }
@@ -70,8 +108,15 @@
                 "LaunchConfigurationName": {
                     "Ref": "SimpleConfig"
                 },
-                "MaxSize": "1",
-                "MinSize": "1"
+                "MaxSize": "2",
+                "MinSize": "1",
+                "Tags": [{
+                    "Key": "Name",
+                    "Value": {
+                        "Ref": "InstanceName"
+                    },
+                    "PropagateAtLaunch": "true"
+                }]
             }
         }
     }
