@@ -8,10 +8,10 @@ Issues or Feature Requests are welcome.
 	NOTE: The master branch is automatically created into a docker image which can be accessed publicly. This image is located at: https://hub.docker.com/r/marjamis/cfn-signaler/
 
 ## Run the container
-    docker run -dit -e STACKNAME=<stackname> -e LOGICALID=<logicalid> -p 8080:8080 marjamis/cfn-signaler
+    docker run -dit -e STACKNAME=<stackname> -e LOGICALID=<logicalid> -p <PublicPort>:8080 marjamis/cfn-signaler
 
 ## Run the binary directly
-    LOGICALID=<logical_id_of_ASG> STACKNAME=<stack_name> PORT=8080 go run main.go
+    LOGICALID=<logical_id_of_ASG> STACKNAME=<stack_name> go run main.go
 
 ## Manual curl against the endpoint
     curl -X POST -d "send=FAILURE" <ip>:<port>/signal/

@@ -107,14 +107,12 @@ func signalHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-        port := os.Getenv("PORT")
-
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/signal", signalHandler)
 	http.HandleFunc("/signal/", signalHandler)
 
-	log.Info("Listening on port " + port + "...")
-	err := http.ListenAndServe(":" + port, nil)
+	log.Info("Listening on port 8080...")
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Error(err)
 		return
