@@ -21,8 +21,7 @@ Issues or Feature Requests are welcome.
     {
     "Parameters": {
         "AMI": {
-            "Type": "AWS::EC2::Image::Id",
-            "Default": "ami-9ff7e8af"
+            "Type": "AWS::EC2::Image::Id"
         },
         "SecurityGroups": {
             "Description": "Make sure port used is open.",
@@ -39,6 +38,9 @@ Issues or Feature Requests are welcome.
             "Type": "String"
         },
         "PublicPort": {
+            "Type": "String"
+        },
+        "InstanceName": {
             "Type": "String"
         }
     },
@@ -107,7 +109,14 @@ Issues or Feature Requests are welcome.
                     "Ref": "SimpleConfig"
                 },
                 "MaxSize": "2",
-                "MinSize": "1"
+                "MinSize": "1",
+                "Tags": [{
+                    "Key": "Name",
+                    "Value": {
+                        "Ref": "InstanceName"
+                    },
+                    "PropagateAtLaunch": "true"
+                }]
             }
         }
     }
