@@ -10,7 +10,7 @@ Issues or Feature Requests are welcome.
 ## Run the container
     docker run -dit -e STACKNAME=<stackname> -e LOGICALID=<logicalid> -p <PublicPort>:8080 marjamis/cfn-signaler
 
-## Run the binary directly
+## Run the application directly with go
     LOGICALID=<logical_id_of_ASG> STACKNAME=<stack_name> go run main.go
 
 ## Manual curl against the endpoint
