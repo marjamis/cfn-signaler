@@ -1,30 +1,31 @@
 package main
 
 import (
-	"os"
 	"errors"
 	"html/template"
 	"net/http"
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	log "github.com/Sirupsen/logrus"
+
+	log "github.com/sirupsen/logrus"
 )
 
-
-type Response struct {
+type response struct {
 	Signal string
-	Error error
+	Error  error
 }
 
-func signal(send string) (err error){
+func signal(send string) (err error) {
 	session := session.New()
 	metadata := ec2metadata.New(session)
 
 	if !metadata.Available() {
-		log.Error("Error: Metadata not available.")
-		return errors.New("Error: Metadata not available.")
+		log.Error("EC2 Metadata not available")
+		return errors.New("EC2 Metadata not available")
 	}
 
 	region, err := metadata.Region()
@@ -33,23 +34,23 @@ func signal(send string) (err error){
 		return err
 	}
 
-	instance_id, err := metadata.GetMetadata("instance-id")
+	instanceId, err := metadata.GetMetadata("instance-id")
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	logical_id := os.Getenv("LOGICALID")
-	stack_name := os.Getenv("STACKNAME")
+	logicalId := os.Getenv("LOGICALID")
+	stackName := os.Getenv("STACKNAME")
 
-	cfn_config := aws.NewConfig().WithRegion(region)
-	svc := cloudformation.New(session, cfn_config)
+	cfnConfig := aws.NewConfig().WithRegion(region)
+	svc := cloudformation.New(session, cfnConfig)
 
 	params := &cloudformation.SignalResourceInput{
-		LogicalResourceId: aws.String(logical_id),
-		StackName:         aws.String(stack_name),
+		LogicalResourceId: aws.String(logicalId),
+		StackName:         aws.String(stackName),
 		Status:            aws.String(send),
-		UniqueId:          aws.String(instance_id),
+		UniqueId:          aws.String(instanceId),
 	}
 
 	_, err = svc.SignalResource(params)
@@ -58,7 +59,12 @@ func signal(send string) (err error){
 		return err
 	}
 
-	log.Info("Function: handler - LogicalID: ", logical_id, " - StackName: ", stack_name)
+	log.WithFields(log.Fields{
+		"Function":  "signal",
+		"LogicalId": logicalId,
+		"StackName": stackName,
+	}).Info()
+
 	return nil
 }
 
@@ -69,7 +75,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if len(title) == 0 {
 		filename = "templates/index.html"
 	} else {
-		if _, err := os.Stat(title); os.IsNotExist(err){
+		if _, err := os.Stat(title); os.IsNotExist(err) {
 			filename = "templates/http_404.html"
 		} else {
 			filename = title
@@ -77,9 +83,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t, _ := template.ParseFiles(filename)
-        t.Execute(w, nil)
+	t.Execute(w, nil)
 
-	log.Info("Function: handler - IP: ", r.RemoteAddr, " - File: ", filename)
+	log.WithFields(log.Fields{
+		"Function": "signal",
+		"IP":       r.RemoteAddr,
+		"File":     filename,
+	}).Info()
 }
 
 func signalHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,10 +110,15 @@ func signalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t, _ := template.ParseFiles("templates/signal.html")
-	data := &Response{Signal: text, Error: err}
+	data := &response{Signal: text, Error: err}
 	t.Execute(w, data)
 
-	log.Info("Function: signalHandler - IP: ", r.RemoteAddr, " - signal: ", value)
+	log.WithFields(log.Fields{
+		"Function": "signalHandler",
+		"IP":       r.RemoteAddr,
+		"Signal":   value,
+		"Error":    err,
+	}).Info()
 }
 
 func main() {
